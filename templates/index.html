@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Task Management System</title>
+    <!-- Bootstrap Modern CSS Gateway -->
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <style>
+        /* Fallback Color Styles in case CDN experiences connection lag */
+        body {
+            background-color: #f4f6f9 !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        .main-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 2.5rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(30, 60, 114, 0.15);
+        }
+        .custom-card {
+            border: none !important;
+            border-radius: 12px !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            background-color: #ffffff;
+        }
+        .pipeline-header {
+            background-color: #ffffff !important;
+            border-bottom: 2px solid #e9ecef !important;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: #495057;
+        }
+        .btn-commit {
+            background-color: #2575fc;
+            border: none;
+            color: white;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .btn-commit:hover {
+            background-color: #1a5fdf;
+            transform: translateY(-1px);
+        }
+        .task-item {
+            border-left: 5px solid #2575fc !important;
+            transition: all 0.2s ease;
+        }
+        .task-item.completed {
+            border-left-color: #6c757d !important;
+            background-color: #f8f9fa;
+        }
+        .completed-text {
+            text-decoration: line-through;
+            color: #adb5bd;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container py-5" style="max-width: 750px;">
+        
+        
+        <div class="main-header text-center">
+            <h1 class="fw-bold tracking-tight mb-2">TASK INTERFACE ENGINE</h1>
+            <p class="mb-0 opacity-75 font-monospace fs-6">FastAPI + SQLAlchemy + Relational SQLite Pipeline</p>
+        </div>
+
+        <!-- Task Ingestion Panel Component -->
+        <div class="card custom-card mb-4 p-2">
+            <div class="card-body">
+                <form id="task-form">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-uppercase text-muted">Task Heading</label>
+                        <input type="text" id="task-title" class="form-control form-control-lg border-2" placeholder="Ex: Configure production variables..." required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-uppercase text-muted">Detailed Specifications</label>
+                        <textarea id="task-desc" class="form-control border-2" placeholder="Provide extra contextual notes or constraints regarding the ticket (Optional)..." rows="2"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-commit btn-lg w-100 py-2.5 mt-2">Commit Transaction to SQL</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Task Operational Output Pipeline -->
+        <div class="card custom-card">
+            <div class="card-header pipeline-header py-3 text-uppercase font-monospace fs-7 d-flex align-items-center">
+                <span class="spinner-grow spinner-grow-sm text-primary me-2" role="status"></span>
+                Active Database Streams
+            </div>
+            <ul id="task-list" class="list-group list-group-flush rounded-bottom-12">
+                <!-- Dynamically populated via backend query streams -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Frontend Core Automation Engine -->
+    <script>
+        const API_URL = "/api/tasks";
+
+        document.addEventListener("DOMContentLoaded", fetchTasks);
+        document.getElementById("task-form").addEventListener("submit", createTask);
+
+        // 1. GET TRANSACTION LOGS
+        async function fetchTasks() {
+            try {
+                const response = await fetch(API_URL);
+                const tasks = await response.json();
+                const listElement = document.getElementById("task-list");
+                listElement.innerHTML = "";
+
+                if (tasks.length === 0) {
+                    listElement.innerHTML = `
+                        <div class="text-center text-muted py-5">
+                            <p class="mb-1 fs-5 fw-semibold">Database is currently vacant</p>
+                            <small>Submit structural fields above to register a permanent entry record.</small>
+                        </div>`;
+                    return;
+                }
+
+                tasks.forEach(task => {
+                    const li = document.createElement("li");
+                    li.className = `list-group-item d-flex justify-content-between align-items-center p-3 task-item ${task.completed ? 'completed' : ''}`;
+                    li.innerHTML = `
+                        <div class="me-3">
+                            <h6 class="${task.completed ? 'completed-text' : 'text-dark'} mb-1 fw-bold">${task.title}</h6>
+                            <p class="text-secondary small mb-0">${task.description || 'No system parameter description assigned.'}</p>
+                        </div>
+                        <div class="d-flex align-items-center shrink-0">
+                            <button class="btn btn-sm ${task.completed ? 'btn-outline-secondary' : 'btn-outline-success'} me-2 fw-semibold px-3" onclick="toggleTask(${task.id})">
+                                ${task.completed ? 'Rollback' : 'Resolve'}
+                            </button>
+                            <button class="btn btn-sm btn-light text-danger border" onclick="deleteTask(${task.id})">
+                                <svg xmlns="http://w3.org" width="14" height="14" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+                                    <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.935 16h6.13cartoona.5.5 0 0 0 1.951-12.34l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
+                                </svg>
+                            </button>
+                        </div>
+                    `;
+                    listElement.appendChild(li);
+                });
+            } catch (err) {
+                console.error("Error drawing elements from pipeline:", err);
+            }
+        }
+
+        // 2. POST NEW ENTRY
+        async function createTask(e) {
+            e.preventDefault();
+            const title = document.getElementById("task-title").value;
+            const description = document.getElementById("task-desc").value;
+
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, description, completed: false })
+            });
+
+            if (response.ok) {
+                document.getElementById("task-form").reset();
+                fetchTasks();
+            }
+        }
+
+        // 3. PUT STATE UPDATE
+        async function toggleTask(id) {
+            await fetch(`${API_URL}/${id}`, { method: "PUT" });
+            fetchTasks();
+        }
+
+        // 4. DELETE DATABASE TARGET
+        async function deleteTask(id) {
+            if (confirm("Permanently erase transaction entity record from target database logs?")) {
+                await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+                fetchTasks();
+            }
+        }
+    </script>
+</body>
+</html>
