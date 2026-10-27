@@ -1,6 +1,8 @@
 # Enterprise Task Architecture Pipeline
 
-A high-performance, fully decoupled full-stack task execution microservice engineered using modern asynchronous Python backend frameworks, strict server-side type-safety gateways, and relational database persistence.
+### 👋 Welcome, Parvana Recruitment Team & Hiring Managers!
+
+Thank you for visiting my portfolio. This production-ready repository showcases my transition from academic code to standard, enterprise-grade backend architecture. Below is a live preview of the fully styled, responsive system interface:
 
 ## 📱 User Interface Preview
 
